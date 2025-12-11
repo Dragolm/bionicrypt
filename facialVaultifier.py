@@ -1,4 +1,6 @@
 import cv2
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes
 import dlib
 import random
 from itertools import combinations
@@ -10,7 +12,7 @@ import hashlib
 # Unzip and place in the same directory
 
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
-PRIME = 2**61 - 1  # Large prime
+PRIME = 2**521 - 1  # Large prime
 DEGREE = 4  # Degree of polynomial, combinations of DEGREE+1 = 5, manageable
 QUANTIZE = 5  # Quantization step for tolerance
 
@@ -38,7 +40,6 @@ def eval_poly(coeffs, x, prime):
 
 def lock(points, secret, degree, prime):
     coeffs = [secret] + [random.randint(0, prime-1) for _ in range(degree)]
-    print(coeffs)
     genuine_points = [(p, eval_poly(coeffs, p, prime)) for p in points]
     chaff_count = len(points) * 10
     chaff_points = []
@@ -52,7 +53,6 @@ def lock(points, secret, degree, prime):
             if y != true_y:
                 chaff_points.append((x, y))
     vault = genuine_points + chaff_points
-    print(vault)
     random.shuffle(vault)
     return vault, hashlib.sha256(str(secret).encode()).hexdigest()  # Store hash for verification
 
@@ -115,8 +115,11 @@ def capture_image():
 
 if __name__ == "__main__":
     mode = input("Enter mode (enroll/verify): ").strip().lower()
-    if mode == "enroll":
+    if input("Is this a test?(y/n)").strip().lower()=="y":
         image = cv2.imread("athul.png")
+    else:
+        image = capture_image()
+    if mode in ["enroll", "e"]:
         if image is None:
             print("Capture failed")
         else:
@@ -124,13 +127,12 @@ if __name__ == "__main__":
             if points is None:
                 print("No face detected")
             else:
-                secret = int(input("Enter secret key (integer): "))
-                vault, h = lock(points, secret, DEGREE, PRIME)
+                private_key = ec.generate_private_key(ec.SECP256K1()).private_numbers().private_value
+                vault, h = lock(points, private_key, DEGREE, PRIME)
                 with open("vault.pkl", "wb") as f:
                     pickle.dump((vault, h), f)
                 print("Enrollment complete. Vault saved.")
-    elif mode == "verify":
-        image = cv2.imread("athul.png")
+    elif mode in ["verify", "v"]:
         if image is None:
             print("Capture failed")
         else:
