@@ -6,6 +6,8 @@ import random
 from itertools import combinations
 import pickle
 import hashlib
+import utilities as util
+import evaluator
 
 # Note: Install dlib and opencv: pip install dlib opencv-python
 # Download shape_predictor_68_face_landmarks.dat from http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
@@ -13,7 +15,7 @@ import hashlib
 
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 PRIME = 2**521 - 1  # Large prime
-DEGREE = 4  # Degree of polynomial, combinations of DEGREE+1 = 5, manageable
+DEGREE = 4
 QUANTIZE = 5  # Quantization step for tolerance
 
 def get_landmarks(image):
@@ -32,28 +34,34 @@ def get_landmarks(image):
         points.append(point)
     return sorted(set(points))  # Unique sorted list
 
-def eval_poly(coeffs, x, prime):
-    result = 0
-    for c in reversed(coeffs):
-        result = (result * x + c) % prime
+def eval_poly(coeffs, p):
+    result = coeffs[0]
+    result = result*(p%evaluator.THE_KEY)
     return result
 
-def lock(points, secret, degree, prime):
-    coeffs = [secret] + [random.randint(0, prime-1) for _ in range(degree)]
-    genuine_points = [(p, eval_poly(coeffs, p, prime)) for p in points]
+def lock(points, secret, degree, key_len):
+    max_point = max(points)
+    min_point = min(points)
+    # print(secret)
+    coeffs = [secret]
+    # print(coeffs)
+    genuine_points = [(p, eval_poly(coeffs, p)) for p in points]
     chaff_count = len(points) * 10
     chaff_points = []
     used_x = set(points)
     while len(chaff_points) < chaff_count:
-        x = random.randint(0, prime-1)
+        x = random.randint(min_point, max_point)
         if x not in used_x:
             used_x.add(x)
-            y = random.randint(0, prime-1)
-            true_y = eval_poly(coeffs, x, prime)
+            y = random.randint(int('1'+'0'*(key_len-1)), int('9'*key_len))
+            true_y = eval_poly(coeffs, x)
             if y != true_y:
                 chaff_points.append((x, y))
     vault = genuine_points + chaff_points
     random.shuffle(vault)
+    util.writer("")
+    for j in vault:
+        util.appender(str(j))
     return vault, hashlib.sha256(str(secret).encode()).hexdigest()  # Store hash for verification
 
 def compute_p_at_x(sub, x, prime):
@@ -130,8 +138,8 @@ if __name__ == "__main__":
             else:
                 # Generating a 256 bit private key
                 private_key = ec.generate_private_key(ec.SECP256K1()).private_numbers().private_value
-                vault, h = lock(points, private_key, DEGREE, PRIME)
-                #Dumping yhe vault into a pickle file
+                vault, h = lock(points, private_key, DEGREE, len(str(private_key)))
+                #Dumping the vault into a pickle file
                 with open("vault.pkl", "wb") as f:
                     pickle.dump((vault, h), f)
                 print("Enrollment complete. Vault saved.")
