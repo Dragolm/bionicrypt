@@ -115,6 +115,7 @@ def capture_image():
 
 if __name__ == "__main__":
     mode = input("Enter mode (enroll/verify): ").strip().lower()
+    # For test case can be removed in production
     if input("Is this a test?(y/n)").strip().lower()=="y":
         image = cv2.imread("athul.png")
     else:
@@ -127,8 +128,10 @@ if __name__ == "__main__":
             if points is None:
                 print("No face detected")
             else:
+                # Generating a 256 bit private key
                 private_key = ec.generate_private_key(ec.SECP256K1()).private_numbers().private_value
                 vault, h = lock(points, private_key, DEGREE, PRIME)
+                #Dumping yhe vault into a pickle file
                 with open("vault.pkl", "wb") as f:
                     pickle.dump((vault, h), f)
                 print("Enrollment complete. Vault saved.")
