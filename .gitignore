@@ -5,3 +5,5 @@ vault.pkl
 __pycache__
 
 temp.txt
+
+priv_key.txt

@@ -15,7 +15,6 @@ import evaluator
 
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 PRIME = 2**521 - 1  # Large prime
-DEGREE = 4
 QUANTIZE = 5  # Quantization step for tolerance
 
 def get_landmarks(image):
@@ -39,14 +38,14 @@ def eval_poly(coeffs, p):
     result = result*(p%evaluator.THE_KEY)
     return result
 
-def lock(points, secret, degree, key_len):
+def lock(points, secret, key_len):
     max_point = max(points)
     min_point = min(points)
     # print(secret)
     coeffs = [secret]
     # print(coeffs)
     genuine_points = [(p, eval_poly(coeffs, p)) for p in points]
-    chaff_count = len(points) * 10
+    chaff_count = len(points) * 5
     chaff_points = []
     used_x = set(points)
     while len(chaff_points) < chaff_count:
@@ -59,46 +58,29 @@ def lock(points, secret, degree, key_len):
                 chaff_points.append((x, y))
     vault = genuine_points + chaff_points
     random.shuffle(vault)
-    util.writer("")
-    for j in vault:
-        util.appender(str(j))
     return vault, hashlib.sha256(str(secret).encode()).hexdigest()  # Store hash for verification
 
-def compute_p_at_x(sub, x, prime):
-    result = 0
-    for i in range(len(sub)):
-        x_i, y_i = sub[i]
-        term = y_i
-        for j in range(len(sub)):
-            if i != j:
-                x_j = sub[j][0]
-                denom = (x_i - x_j) % prime
-                denom_inv = pow(denom, prime-2, prime)
-                numer = (x - x_j) % prime
-                term = (term * numer * denom_inv) % prime
-        result = (result + term) % prime
-    return result
 
-def unlock(points, vault, degree, prime, threshold=0.7):
+def unlock(points, vault, prime, threshold=0.7):
     candidate_points = []
     for x in points:
         for vx, vy in vault:
             if vx == x:
                 candidate_points.append((vx, vy))
                 break
-    num_points = len(candidate_points)
-    if num_points < degree + 1:
-        return None
-    for sub in combinations(candidate_points, degree + 1):
-        sub = list(sub)
-        fit_count = 0
-        for cx, cy in candidate_points:
-            computed_y = compute_p_at_x(sub, cx, prime)
-            if computed_y == cy:
-                fit_count += 1
-        if fit_count >= threshold * num_points:
-            secret = compute_p_at_x(sub, 0, prime)
-            return secret
+    key = candidate_points[0][1]//(candidate_points[0][0]%evaluator.THE_KEY)
+    hits = 0
+    for i in range(1, len(candidate_points)):
+        try:
+            temp_key = candidate_points[i][1]//(candidate_points[i][0]%evaluator.THE_KEY)
+            if temp_key==key:
+                hits+=1
+        except Exception as e:
+            print(e)
+            print(candidate_points[i][0]) 
+            print(candidate_points[i][1])
+    if hits>len(candidate_points)-10:
+        return key
     return None
 
 def capture_image():
@@ -138,7 +120,8 @@ if __name__ == "__main__":
             else:
                 # Generating a 256 bit private key
                 private_key = ec.generate_private_key(ec.SECP256K1()).private_numbers().private_value
-                vault, h = lock(points, private_key, DEGREE, len(str(private_key)))
+                util.filewriter(str(private_key), 'priv_key')
+                vault, h = lock(points, private_key, len(str(private_key)))
                 #Dumping the vault into a pickle file
                 with open("vault.pkl", "wb") as f:
                     pickle.dump((vault, h), f)
@@ -154,7 +137,10 @@ if __name__ == "__main__":
                 try:
                     with open("vault.pkl", "rb") as f:
                         vault, stored_hash = pickle.load(f)
-                    recovered_secret = unlock(points, vault, DEGREE, PRIME)
+                    util.writer("")
+                    for j in vault:
+                        util.appender(str(j))
+                    recovered_secret = unlock(points, vault, PRIME)
                     if recovered_secret is not None:
                         recovered_hash = hashlib.sha256(str(recovered_secret).encode()).hexdigest()
                         if recovered_hash == stored_hash:
