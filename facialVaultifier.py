@@ -16,6 +16,7 @@ import evaluator
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 PRIME = 2**521 - 1  # Large prime
 QUANTIZE = 5  # Quantization step for tolerance
+userName = "john cena"
 
 def get_landmarks(image):
     detector = dlib.get_frontal_face_detector()
@@ -33,18 +34,18 @@ def get_landmarks(image):
         points.append(point)
     return sorted(set(points))  # Unique sorted list
 
-def eval_poly(coeffs, p):
+def eval_poly(coeffs, p, key):
     result = coeffs[0]
-    result = result*(p%evaluator.THE_KEY)
+    result = result*(p%key)
     return result
 
-def lock(points, secret, key_len):
+def lock(points, secret, key_len, key):
     max_point = max(points)
     min_point = min(points)
     # print(secret)
     coeffs = [secret]
     # print(coeffs)
-    genuine_points = [(p, eval_poly(coeffs, p)) for p in points]
+    genuine_points = [(p, eval_poly(coeffs, p, key)) for p in points]
     chaff_count = len(points) * 5
     chaff_points = []
     used_x = set(points)
@@ -53,7 +54,7 @@ def lock(points, secret, key_len):
         if x not in used_x:
             used_x.add(x)
             y = random.randint(int('1'+'0'*(key_len-1)), int('9'*key_len))
-            true_y = eval_poly(coeffs, x)
+            true_y = eval_poly(coeffs, x, key)
             if y != true_y:
                 chaff_points.append((x, y))
     vault = genuine_points + chaff_points
@@ -61,18 +62,18 @@ def lock(points, secret, key_len):
     return vault, hashlib.sha256(str(secret).encode()).hexdigest()  # Store hash for verification
 
 
-def unlock(points, vault, prime, threshold=0.7):
+def unlock(points, vault, key, threshold=0.7):
     candidate_points = []
     for x in points:
         for vx, vy in vault:
             if vx == x:
                 candidate_points.append((vx, vy))
                 break
-    key = candidate_points[0][1]//(candidate_points[0][0]%evaluator.THE_KEY)
+    key = candidate_points[0][1]//(candidate_points[0][0]%key)
     hits = 0
     for i in range(1, len(candidate_points)):
         try:
-            temp_key = candidate_points[i][1]//(candidate_points[i][0]%evaluator.THE_KEY)
+            temp_key = candidate_points[i][1]//(candidate_points[i][0]%key)
             if temp_key==key:
                 hits+=1
         except Exception as e:
@@ -110,6 +111,7 @@ if __name__ == "__main__":
         image = cv2.imread("athul.png")
     else:
         image = capture_image()
+    THE_KEY = evaluator.keyGiver(userName)
     if mode in ["enroll", "e"]:
         if image is None:
             print("Capture failed")
@@ -121,7 +123,7 @@ if __name__ == "__main__":
                 # Generating a 256 bit private key
                 private_key = ec.generate_private_key(ec.SECP256K1()).private_numbers().private_value
                 util.filewriter(str(private_key), 'priv_key')
-                vault, h = lock(points, private_key, len(str(private_key)))
+                vault, h = lock(points, private_key, len(str(private_key)), THE_KEY)
                 #Dumping the vault into a pickle file
                 with open("vault.pkl", "wb") as f:
                     pickle.dump((vault, h), f)
@@ -140,7 +142,7 @@ if __name__ == "__main__":
                     util.writer("")
                     for j in vault:
                         util.appender(str(j))
-                    recovered_secret = unlock(points, vault, PRIME)
+                    recovered_secret = unlock(points, vault, THE_KEY)
                     if recovered_secret is not None:
                         recovered_hash = hashlib.sha256(str(recovered_secret).encode()).hexdigest()
                         if recovered_hash == stored_hash:
