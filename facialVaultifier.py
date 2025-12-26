@@ -62,7 +62,7 @@ def lock(points, secret, key_len, key):
     return vault, hashlib.sha256(str(secret).encode()).hexdigest()  # Store hash for verification
 
 
-def unlock(points, vault, key, threshold=0.7):
+def unlock(points, vault, key):
     candidate_points = []
     for x in points:
         for vx, vy in vault:
