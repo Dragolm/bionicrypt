@@ -1,6 +1,5 @@
 import cv2
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import hashes
 import dlib
 import random
 from itertools import combinations
@@ -104,6 +103,35 @@ def capture_image():
             cv2.destroyAllWindows()
             return None
 
+def verifier(image, THE_KEY):
+    if image is None:
+        print("Capture failed")
+    else:
+        points = get_landmarks(image)
+        if points is None:
+            print("No face detected")
+        else:
+            try:
+                with open("vault.pkl", "rb") as f:
+                    vault, stored_hash = pickle.load(f)
+                util.writer("")
+                for j in vault:
+                    util.appender(str(j))
+                recovered_secret = unlock(points, vault, THE_KEY)
+                if recovered_secret is not None:
+                    recovered_hash = hashlib.sha256(str(recovered_secret).encode()).hexdigest()
+                    if recovered_hash == stored_hash:
+                        print("Verification successful. Secret key:", recovered_secret)
+                        return recovered_secret
+                    else:
+                        print("Verification failed.",recovered_secret)
+                else:
+                    print("Verification failed.")
+            except FileNotFoundError:
+                print("No vault found. Enroll first.")
+    return None
+
+
 if __name__ == "__main__":
     mode = input("Enter mode (enroll/verify): ").strip().lower()
     # For test case can be removed in production
@@ -129,29 +157,6 @@ if __name__ == "__main__":
                     pickle.dump((vault, h), f)
                 print("Enrollment complete. Vault saved.")
     elif mode in ["verify", "v"]:
-        if image is None:
-            print("Capture failed")
-        else:
-            points = get_landmarks(image)
-            if points is None:
-                print("No face detected")
-            else:
-                try:
-                    with open("vault.pkl", "rb") as f:
-                        vault, stored_hash = pickle.load(f)
-                    util.writer("")
-                    for j in vault:
-                        util.appender(str(j))
-                    recovered_secret = unlock(points, vault, THE_KEY)
-                    if recovered_secret is not None:
-                        recovered_hash = hashlib.sha256(str(recovered_secret).encode()).hexdigest()
-                        if recovered_hash == stored_hash:
-                            print("Verification successful. Secret key:", recovered_secret)
-                        else:
-                            print("Verification failed.",recovered_secret)
-                    else:
-                        print("Verification failed.")
-                except FileNotFoundError:
-                    print("No vault found. Enroll first.")
+        verifier(image, THE_KEY)
     else:
         print("Invalid mode.")

@@ -9,3 +9,7 @@ temp.txt
 priv_key.txt
 
 test.py
+
+*.enc
+
+*_restored.*

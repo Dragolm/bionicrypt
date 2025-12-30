@@ -5,5 +5,5 @@ import hashlib
 def keyGiver(string: str):
     hash_bytes = hashlib.md5(string.encode()).digest()
     hash_int = int.from_bytes(hash_bytes, 'big')
-    print(hash_int)
+    # print(hash_int)
     return hash_int
