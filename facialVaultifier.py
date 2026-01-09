@@ -131,6 +131,24 @@ def verifier(image, THE_KEY):
                 print("No vault found. Enroll first.")
     return None
 
+def enroller(image, THE_KEY):
+    if image is None:
+        print("Capture failed")
+    else:
+        points = get_landmarks(image)
+        if points is None:
+            print("No face detected")
+            exit()
+        else:
+            # Generating a 256 bit private key
+            private_key = ec.generate_private_key(ec.SECP256K1()).private_numbers().private_value
+            util.filewriter(str(private_key), 'priv_key')
+            vault, h = lock(points, private_key, len(str(private_key)), THE_KEY)
+            #Dumping the vault into a pickle file
+            with open("vault.pkl", "wb") as f:
+                pickle.dump((vault, h), f)
+            print("Enrollment complete. Vault saved.")
+
 
 if __name__ == "__main__":
     mode = input("Enter mode (enroll/verify): ").strip().lower()
@@ -141,21 +159,7 @@ if __name__ == "__main__":
         image = capture_image()
     THE_KEY = evaluator.keyGiver(userName)
     if mode in ["enroll", "e"]:
-        if image is None:
-            print("Capture failed")
-        else:
-            points = get_landmarks(image)
-            if points is None:
-                print("No face detected")
-            else:
-                # Generating a 256 bit private key
-                private_key = ec.generate_private_key(ec.SECP256K1()).private_numbers().private_value
-                util.filewriter(str(private_key), 'priv_key')
-                vault, h = lock(points, private_key, len(str(private_key)), THE_KEY)
-                #Dumping the vault into a pickle file
-                with open("vault.pkl", "wb") as f:
-                    pickle.dump((vault, h), f)
-                print("Enrollment complete. Vault saved.")
+        enroller(image, THE_KEY)
     elif mode in ["verify", "v"]:
         verifier(image, THE_KEY)
     else:

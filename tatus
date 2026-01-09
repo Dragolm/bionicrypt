@@ -1,0 +1,71 @@
+[33mcommit 7c17f19aac77ed483c1b019a1588bac6b422e4e5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Tue Dec 30 11:51:32 2025 +0530
+
+    added cryptomatic400 it works but not clean
+
+[33mcommit 9d7addee57f78b84a88e764fb01effdba7a93979[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Fri Dec 26 22:28:08 2025 +0530
+
+    dunno what changed
+
+[33mcommit 4562b39cca252149807d9a9138004f83a0dc016c[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Fri Dec 26 20:41:13 2025 +0530
+
+    nothing much, just removed test.py from indexed
+
+[33mcommit 669f34bea98b51c4dcfeae0da71948f04dbd07d2[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Thu Dec 25 12:03:38 2025 +0530
+
+    made the evaluator class and keygiver function
+
+[33mcommit 4ebfaf6d4aa9bcf8df45cacbd5ea4d9110ed0b4d[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Wed Dec 17 11:38:14 2025 +0530
+
+    Fixed the unlock functionto work with the new lock function
+
+[33mcommit 6ba56d2c95a48dd4457fb4a0447cebfa0aa44e0c[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Mon Dec 15 15:35:20 2025 +0530
+
+    Fixed the vault locking mechanic to hide key better
+
+[33mcommit 7d1667d1ce14de78448d4f8fc06074443f58485b[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Mon Dec 15 09:40:46 2025 +0530
+
+    added some commits
+
+[33mcommit 05840ba189493a5c30c1c16e351b0735b9f6641f[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Mon Dec 15 09:35:38 2025 +0530
+
+    reverting to the modified dith code
+
+[33mcommit f1d310e1ab68693fc033fb70c17cc17b092cf308[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Sat Dec 13 12:42:46 2025 +0530
+
+    retry
+
+[33mcommit c9422af7e38df14a46235af86dc4f2089c774522[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Sat Dec 13 12:42:28 2025 +0530
+
+    retry
+
+[33mcommit 57c837ae15bd233c6a04162c2d80fcbf88c7ec62[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Thu Dec 11 15:08:37 2025 +0530
+
+    Have fun mergining muhahahahah
+
+[33mcommit dfdbc496eb4d65eb4c107aabe85224843bcbb8f0[m
+Author: dragolm <toolazytothinkofone2@gmail.com>
+Date:   Thu Dec 11 14:30:34 2025 +0530
+
+    initial commit after dith made the facial vault maker

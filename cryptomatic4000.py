@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 import os
-from facialVaultifier import verifier, capture_image
+from facialVaultifier import verifier, capture_image, enroller
 import cv2
 import evaluator
 
@@ -77,16 +77,20 @@ if input("Is this a test?(y/n)").strip().lower()=="y":
 else:
     image = capture_image()
 THE_KEY = evaluator.keyGiver(userName)
-password = str(verifier(image, THE_KEY))
 
-# Usage with password
-# password = "MySecurePassword123!"
-encryptor = PasswordFileEncryptor(password)
+if mode in ["enroll", "e"]:
+    enroller(image, THE_KEY)
+else:
+    password = str(verifier(image, THE_KEY))
 
-# Encrypt/home/the-forge/Desktop/trashable/pybrakeTrialShit/vacation.png
-encryptor.encrypt_file('vacation.png', 'vacation.png.enc')
-encryptor.encrypt_file('family_video.mp4', 'family_video.mp4.enc')
+    # Usage with password
+    # password = "MySecurePassword123!"
+    encryptor = PasswordFileEncryptor(password)
 
-# Decrypt (need same password)
-encryptor.decrypt_file('vacation.png.enc', 'vacation_restored.png')
-encryptor.decrypt_file('family_video.mp4.enc', 'family_video_restored.mp4')
+    # Encrypt/home/the-forge/Desktop/trashable/pybrakeTrialShit/vacation.png
+    encryptor.encrypt_file('vacation.png', 'vacation.png.enc')
+    encryptor.encrypt_file('family_video.mp4', 'family_video.mp4.enc')
+
+    # Decrypt (need same password)
+    encryptor.decrypt_file('vacation.png.enc', 'vacation_restored.png')
+    encryptor.decrypt_file('family_video.mp4.enc', 'family_video_restored.mp4')
